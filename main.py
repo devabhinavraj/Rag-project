@@ -29,7 +29,7 @@ template = ChatPromptTemplate([
     ('human', '{data}')
 ])
 
-prompt = template.format_messages(data = chunks) 
+prompt = template.format_messages(data = chunks[0].page_content) 
 
-
-print(len(chunks))
+response = model.invoke(prompt)
+print(response.content)
