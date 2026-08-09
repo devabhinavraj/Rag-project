@@ -17,6 +17,11 @@ langchain-groq
 langchain-text-splitters
 tiktoken
 
+pandas
+numpy
+
+sentence-transformers
+
 python-dotenv
 
 pypdf
