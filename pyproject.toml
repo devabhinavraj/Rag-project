@@ -19,8 +19,11 @@ dependencies = [
     "langchain-mistralai>=1.1.6",
     "langchain-text-splitters>=1.1.2",
     "mistralai>=2.9.1",
+    "numpy>=2.5.1",
+    "pandas>=3.0.5",
     "pypdf>=6.15.0",
     "python-dotenv>=1.2.2",
+    "sentence-transformers>=5.7.0",
     "tiktoken>=0.13.0",
 ]
 
