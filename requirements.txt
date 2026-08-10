@@ -22,6 +22,8 @@ numpy
 
 sentence-transformers
 
+streamlit
+
 python-dotenv
 
 pypdf

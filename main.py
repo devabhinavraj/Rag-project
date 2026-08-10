@@ -1,35 +1,79 @@
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate
+
 
 load_dotenv()
 
-
-loader = PyPDFLoader(
-    r"C:\Users\win11\Desktop\Rag-project\document loaders\deeplearning.pdf"
+embedding = HuggingFaceEmbeddings(
+    model_name = "sentence-transformers/all-mpnet-base-v2"
 )
 
-docs = loader.load()
-
-model = ChatGroq(
-    model="openai/gpt-oss-120b"
+vectorstore = Chroma(
+    persist_directory="Database",
+    embedding_function=embedding
 )
 
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size = 1000,
-    chunk_overlap = 300
+retriever = vectorstore.as_retriever(
+    search_type = "mmr",
+    search_kwargs = {
+        'k':3,
+        'fetch_k':10,
+        'lambda_mult' : 0.5 
+    }
 )
 
-chunks = splitter.split_documents(docs)
+llm = ChatGroq(
+    model= "openai/gpt-oss-120b"
+)
 
-template = ChatPromptTemplate([
-    ('system' , "You are an AI assistant that summarizes the provided documents clearly and concisely."),
-    ('human', '{data}')
-])
+template = ChatPromptTemplate(
+    [
+        (
+            'system' ,
+        """You are a helpful AI assistant.
 
-prompt = template.format_messages(data = chunks[0].page_content) 
+Use ONLY the provided context to answer the question.
 
-response = model.invoke(prompt)
-print(response.content)
+If the answer is not present in the context,
+say: "I could not find the answer in the document."
+
+"""
+        ),
+        (
+            'human' ,
+            """Context:
+{context}
+
+Question:
+{question}
+"""
+        ),
+    ]
+)
+
+
+print("press 0 to exit ")
+while True:
+    query = input("USER:")
+    if query == "0":
+        print("EXIT!!")
+        break
+
+    docs = retriever.invoke(query)
+
+    context = "\n".join(
+        [docs.page_content for docs in docs]
+    )
+
+    final_prompt = template.invoke(
+        {
+            'context': context,
+            'question' : query
+        }
+    )
+
+    response = llm.invoke(final_prompt)
+    print(f"\n AI: {response.content}")
